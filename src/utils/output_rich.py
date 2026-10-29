@@ -1,75 +1,14 @@
-import inspect
-import os
-
 from rich.console import Console
-from rich.panel import Panel
 from rich.table import Table
 
 
 console = Console()
 
+
 class Rich:
     """
     Класс с методами вывода логов в консоль с использованием библиотеки Rich
     """
-
-    def __init__(self):
-        pass
-
-
-    @staticmethod
-    def log_error(message: str, details: str = "") -> None:
-        """
-        Вывод панели с текстом ошибки и деталями ошибки (если такая информация есть).
-        - вывод в терминал (с использованием библиотеки Rich)
-
-        :param message: Принимает текст сообщения ошибки, который будет
-        выведен в терминал (консоль)
-
-        :param details: Дефолтно равно пустой строке. Принимает текст детали ошибки,
-        который будет выведен в терминал (консоль)
-
-        :return: None
-        """
-
-        def get_caller_info() -> str:
-            """
-            Возвращает имя файла и номер строки, откуда была вызвана функция.
-
-            :return: str - строка с номером строки и именем файла, из которого была
-             вызвана функция
-            """
-
-            try:
-                # Поднимает на два уровня по стеку вызова. Должен быть файл,
-                # из которого вызвал функцию
-
-                frame = inspect.currentframe().f_back.f_back
-                filename = os.path.basename(frame.f_code.co_filename)
-                line = frame.f_lineno
-
-                return f"{filename}:{line}"
-
-            except (AttributeError, KeyError, ValueError, TypeError):
-                return "Неизвестно:?"
-
-        caller = get_caller_info()
-
-        content = f"[bold white on red]ERROR[/bold white on red]\n\n{message}"
-
-        if details:
-            content += f"\n\n[dim]{details}[/dim]"
-
-        content += f"\n\n[dim]Вызов из: {caller}[/dim]"
-
-        console.print(
-            Panel(
-                content,
-                title="[red]Ошибка[/red]",
-                border_style="red",
-                padding=(1, 2),
-            )
-        )
 
 
     @staticmethod
@@ -115,48 +54,6 @@ class Rich:
 
 
     @staticmethod
-    def warning_log(message: str) -> None:
-        """
-        Лог-предупреждение о каких-то незначительных проблемах выполнения операции
-         - вывод в терминал (с использованием библиотеки Rich)
-
-        :param message: Принимает текст лога, который будет выведен в терминал (консоль)
-
-        :return: None
-        """
-
-        console.log(f"[bold yellow][WARN] ВНИМАНИЕ: {message}[/bold yellow]", _stack_offset=2)
-
-
-    @staticmethod
-    def enter_log(message: str) -> None:
-        """
-        Лог, информирующий о запуске какого-нибудь окна интерфейса.
-        Например, если запустится загрузочное окно, то выведется лог о "входе" в это окно.
-
-        :param message: Принимает текст сообщения о входе (показе) в какое-то окно.
-
-        :return: None
-        """
-
-        console.log(f"[magenta][ENTER] ▶ ВХОД: {message}[/magenta]",  _stack_offset=2)
-
-
-    @staticmethod
-    def exit_log(message: str) -> None:
-        """
-        Лог, информирующий о закрытии какого-нибудь окна интерфейса.
-        Например, если закрыть основное окно приложения, то выведется лог о "выходе" из
-        этого окна.
-
-        :param message: Принимает текст сообщения о выходе (закрытии) в какого-то окна.
-
-        :return: None
-        """
-        console.log(f"[magenta][EXIT] ◀ ВЫХОД: {message}[/magenta]",  _stack_offset=2)
-
-
-    @staticmethod
     def print_spacer() -> None:
         """
         Разделитель для более наглядного показа лога процессов в консоли
@@ -165,18 +62,6 @@ class Rich:
         """
 
         console.log(f"[grey46][Debug] {'-' * 151}[/grey46]", _stack_offset=2)
-
-
-    @staticmethod
-    def print_spacer_points() -> None:
-        """
-        Разделитель для более наглядного показа лога процессов в консоли -
-        разделитель в виде точек
-
-        :return: None
-        """
-
-        console.log(f"[grey46][Debug] {'.' * 151}[/grey46]", _stack_offset=2)
 
 
     @staticmethod
@@ -200,40 +85,3 @@ class Rich:
             table.add_row(*[str(cell) for cell in row])
 
         console.print(table)
-
-
-    @staticmethod
-    def print_message(message_text: str, sender: str = None) -> None:
-        """
-        Функция для вывода сообщения в консоль с логом [MESSAGE]
-
-        :param message_text: str - принимает текст сообщения
-        :param sender: str - имя отправителя сообщения (дефолтно = None)
-
-        :return: None
-        """
-
-        message_text = message_text.replace("\\", "")
-
-        if sender:
-            console.log(f"[#BDECB6][MESSAGE] Сообщение {sender}: {message_text}[/#BDECB6]",
-                        _stack_offset=2)
-
-        else:
-            console.log(f"[#BDECB6][MESSAGE] Сообщение: {message_text}[/#BDECB6]",
-                        _stack_offset=2)
-
-
-    @staticmethod
-    def input_data(input_label: str):
-        """
-        Функция для красивого оформления ввода данных через терминал с использованием
-         библиотеки Rich
-        :param input_label: Str - Принимает строку с заголовком ввода (пример: 'Автор',
-         чтобы в логе ввода было 'Автор: ')
-        :return: Optional
-        """
-
-        value = console.input(f"[bold orange1][INPUT] {input_label}: [/bold orange1]")
-
-        return value
