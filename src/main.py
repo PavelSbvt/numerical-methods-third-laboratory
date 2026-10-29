@@ -33,7 +33,7 @@ if __name__== "__main__":
     show_graphic_formula_extrapolation_and_interpolation()
 
     for x in xi_mas:
-        y_val = gauss_first_formula(x, x0, h, diff_table)
+        y_val = gauss_first_formula(x, x0, h, diff_table, True)
 
     cols_inter = ["xi", "yi"]
     rows_inter = []
