@@ -5,7 +5,8 @@ from core.first_Gauss_formula import (
     cols_res, rows_res,
     print_gauss_polynomial_formula,
     x0, h,
-    show_graphic_formula)
+    show_graphic_formula_interpolation,
+    show_graphic_formula_extrapolation)
 from utils.output_rich import Rich
 
 # варианты лабораторной - 4, 10
@@ -28,4 +29,6 @@ if __name__== "__main__":
 
     print_gauss_polynomial_formula(x0, h, diff_table)
 
-    show_graphic_formula()
+    show_graphic_formula_interpolation()
+
+    show_graphic_formula_extrapolation()
