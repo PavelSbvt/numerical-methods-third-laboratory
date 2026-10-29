@@ -8,7 +8,10 @@ from utils.output_rich import Rich
 xi_mas = np.array([1.375, 1.380, 1.385, 1.390, 1.395])
 yi_mas = np.array([5.04192, 5.17744, 5.32016, 5.47069, 5.62968])
 
-xj_mas = np.array([1.350, 1.355, 1.360, 1.365, 1.370])
+xj_mas = np.array([1.350, 1.355, 1.360,
+                   1.365, 1.370, 1.375,
+                   1.380, 1.385, 1.390,
+                   1.395, 1.400])
 
 h = xi_mas[1] - xi_mas[0]
 
@@ -39,7 +42,6 @@ for i in range(n):
         else:
             row.append("") # Пустые ячейки для красивого треугольника
     rows.append(row)
-
 
 def gauss_first_formula(x: float, x0: float, h: float, table: list[list]) -> float:
     """
@@ -80,7 +82,6 @@ for x in xj_mas:
     q_val = (x - x0) / h
     rows_res.append([f"{x:.3f}", f"{y_val:.6f}", f"{q_val:.4f}"])
 
-
 def print_gauss_polynomial_formula(x0: float, h: float, table: list[list]) -> None:
     """
     Выводит формулу полинома Гаусса в явном виде с подставленными числами.
@@ -109,10 +110,44 @@ def print_gauss_polynomial_formula(x0: float, h: float, table: list[list]) -> No
     Rich.simple_log(formula)
 
 
-def show_graphic_formula():
+def show_graphic_formula_interpolation():
     """
     Функция для показа графика интерполяции
 
+    :return:
+    """
+
+    Rich.print_spacer()
+    Rich.simple_log("Построение графика интерполяции")
+
+    # 1. Создаем гладкую линию для полинома
+    # Берем диапазон от минимального xj до максимального xi с запасом
+    x_min = min(min(xj_mas), min(xi_mas)) - 0.01
+    x_max = max(max(xi_mas), max(xj_mas)) + 0.01
+    x_smooth = np.linspace(x_min, x_max, 200)
+
+    y_smooth = [gauss_first_formula(xi, x0, h, diff_table) for xi in x_smooth]
+
+    plt.figure(figsize=(10, 6))
+
+    # Линия полинома
+    plt.plot(x_smooth, y_smooth, label='Полином Гаусса', color='blue')
+
+    # Вычисленные точки
+    plt.scatter(xj_mas, gauss_results, color='green', marker='x', s=80, label='Вычисленные точки (y_j)', zorder=5)
+
+    # Оформление
+    plt.title('Интерполяция (Первая формула Гаусса)')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.show()
+
+
+def show_graphic_formula_extrapolation() -> None:
+    """
+    Функция для показа графика экстраполяции с найденными точками yj
     :return:
     """
 
