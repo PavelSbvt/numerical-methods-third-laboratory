@@ -43,7 +43,9 @@ for i in range(n):
             row.append("") # Пустые ячейки для красивого треугольника
     rows.append(row)
 
-def gauss_first_formula(x: float, x0: float, h: float, table: list[list]) -> float:
+def gauss_first_formula(
+        x: float, x0: float, h: float,
+        table: list[list], show_logs: bool = False) -> float:
     """
     Вычисляет значение полинома по первой формуле Гаусса (стр. 16 методички).
     Для экстраполяции влево в качестве x0 берем первый узел (индекс 0).
@@ -66,7 +68,26 @@ def gauss_first_formula(x: float, x0: float, h: float, table: list[list]) -> flo
     term5 = ((q + 1) * q * (q - 1) * (q - 2) / 24) * d4y_2
     term6 = ((q + 2) * (q + 1) * q * (q - 1) * (q - 2) / 120) * d5y_2
 
-    return term1 + term2 + term3 + term4 + term5 + term6
+    result = term1 + term2 + term3 + term4 + term5 + term6
+
+    if show_logs:
+        Rich.print_spacer()
+        Rich.debug_log(f"Пошаговый расчет для x = {x:.3f}")
+        Rich.debug_log(f"1. Вычисление параметра q = (x - x0) / h")
+        Rich.debug_log(f"   q = ({x:.3f} - {x0:.3f}) / {h:.3f} = {q:.4f}")
+
+        Rich.debug_log(f"2. Подстановка в формулу Гаусса:")
+        Rich.debug_log(f"   Слагаемое 1 (y0): {term1:.6f}")
+        Rich.debug_log(f"   Слагаемое 2 (q * dy0): {term2:.6f}")
+        Rich.debug_log(f"   Слагаемое 3 (q(q-1)/2 * d2y): {term3:.6f}")
+        Rich.debug_log(f"   Слагаемое 4 ((q+1)q(q-1)/6 * d3y): {term4:.6f}")
+        Rich.debug_log(f"   Слагаемое 5 ((q+1)q(q-1)(q-2)/24 * d4y): {term5:.6f}")
+        Rich.debug_log(f"   Слагаемое 6 (d5y): {term6:.6f}")
+
+        Rich.success_log(f"3. Итоговый результат P(x) = {result:.6f}")
+        Rich.debug_log(f"Расчет для x = {x:.3f} завершен")
+
+    return result
 
 
 # Вывод результатов в таблицу
@@ -110,34 +131,34 @@ def print_gauss_polynomial_formula(x0: float, h: float, table: list[list]) -> No
     Rich.simple_log(formula)
 
 
-def show_graphic_formula_interpolation():
+def show_approximation_graphic():
     """
-    Функция для показа графика интерполяции
-
-    :return:
+    Функция для показа графика только аппроксимации (без интерполяции)
     """
 
     Rich.print_spacer()
-    Rich.simple_log("Построение графика интерполяции")
+    Rich.simple_log("Построение графика аппроксимации (МНК)")
 
-    # 1. Создаем гладкую линию для полинома
-    # Берем диапазон от минимального xj до максимального xi с запасом
+    a, b = linear_approximation(xi_mas, yi_mas)
+
+    Rich.simple_log(f"Уравнение аппроксимации: F(x) = {a:.5f} * x + {b:.5f}")
+
+    approx_results = [a * x + b for x in xj_mas]
+
     x_min = min(min(xj_mas), min(xi_mas)) - 0.01
     x_max = max(max(xi_mas), max(xj_mas)) + 0.01
     x_smooth = np.linspace(x_min, x_max, 200)
-
-    y_smooth = [gauss_first_formula(xi, x0, h, diff_table) for xi in x_smooth]
+    y_smooth = [a * xi + b for xi in x_smooth]
 
     plt.figure(figsize=(10, 6))
 
-    # Линия полинома
-    plt.plot(x_smooth, y_smooth, label='Полином Гаусса', color='blue')
+    plt.plot(x_smooth, y_smooth, label='Линейная аппроксимация (МНК)', color='magenta', linewidth=2)
 
-    # Вычисленные точки
-    plt.scatter(xj_mas, gauss_results, color='green', marker='x', s=80, label='Вычисленные точки (y_j)', zorder=5)
+    plt.scatter(xi_mas, yi_mas, color='red', marker='o', s=80, label='Исходные узлы (x_i, y_i)', zorder=5)
 
-    # Оформление
-    plt.title('Интерполяция (Первая формула Гаусса)')
+    plt.scatter(xj_mas, approx_results, color='cyan', marker='s', s=50, label='Вычисленные точки (x_j)', zorder=5)
+
+    plt.title('Аппроксимация (Метод Наименьших Квадратов)')
     plt.xlabel('x')
     plt.ylabel('y')
     plt.legend()
@@ -145,7 +166,7 @@ def show_graphic_formula_interpolation():
     plt.show()
 
 
-def show_graphic_formula_extrapolation() -> None:
+def show_graphic_formula_extrapolation_and_interpolation() -> None:
     """
     Функция для показа графика экстраполяции с найденными точками yj
     :return:
@@ -180,3 +201,65 @@ def show_graphic_formula_extrapolation() -> None:
     plt.legend()
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.show()
+
+
+def linear_approximation(x, y, show_logs=False):
+    """
+    Функция вычисления линейной аппроксимации методом наименьших квадратов.
+    Возвращает коэффициенты a и b для уравнения y = ax + b.
+    """
+    n = len(x)
+
+    # Вычисляем суммы
+    sum_x = sum(x)
+    sum_y = sum(y)
+    sum_xy = sum(xi * yi for xi, yi in zip(x, y))
+    sum_xx = sum(xi * xi for xi in x)
+
+    denominator = n * sum_xx - sum_x**2
+
+    # Минимальные логи (только если show_logs=True)
+    if show_logs:
+        Rich.print_spacer()
+        Rich.simple_log("Вычисление коэффициентов линейной аппроксимации (МНК)")
+        Rich.debug_log(f"Суммы: Σx = {sum_x:.5f}, Σy = {sum_y:.5f}, Σxy = {sum_xy:.5f}, Σx² = {sum_xx:.5f}")
+        Rich.debug_log(f"Знаменатель: n*Σx² - (Σx)² = {n}*{sum_xx:.5f} - ({sum_x:.5f})² = {denominator:.5f}")
+
+    a = (n * sum_xy - sum_x * sum_y) / denominator
+    b = (sum_y - a * sum_x) / n
+
+    if show_logs:
+        Rich.success_log(f"Коэффициенты: a = {a:.5f}, b = {b:.5f}")
+        Rich.simple_log(f"Уравнение аппроксимации: F(x) = {a:.5f} * x + {b:.5f}")
+
+    return a, b
+
+
+def show_approximate_and_interpolation_graphics():
+    """
+    Построение графика наложения интерполяции и линейной аппроксимации
+    """
+
+    x_min = min(min(xj_mas), min(xi_mas)) - 0.01
+    x_max = max(max(xi_mas), max(xj_mas)) + 0.01
+    x_smooth = np.linspace(x_min, x_max, 200)
+
+    a, b = linear_approximation(xi_mas, yi_mas)
+
+    y_gauss_smooth = [gauss_first_formula(xi, x0, h, diff_table) for xi in x_smooth]
+    y_approx_smooth = [a * xi + b for xi in x_smooth]
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(x_smooth, y_gauss_smooth, label='Полином Гаусса', color='blue', linewidth=2)
+    plt.plot(x_smooth, y_approx_smooth, label='Линейная аппроксимация', color='magenta', linestyle='--',
+             linewidth=2)
+    plt.scatter(xi_mas, yi_mas, color='red', marker='o', s=80, label='Исходные узлы', zorder=5)
+    plt.scatter(xj_mas, gauss_results, color='green', marker='x', s=80, label='Точки Гаусса (x_j)', zorder=5)
+    plt.title('Наложение: Интерполяция Гаусса и Аппроксимация МНК')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.show()
+
+
