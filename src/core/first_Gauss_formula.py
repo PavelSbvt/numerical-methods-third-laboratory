@@ -14,7 +14,7 @@ h = xi_mas[1] - xi_mas[0]
 
 n = len(xi_mas)
 
-def build_difference_table(y):
+def build_difference_table(y: float) -> list[list]:
     """
     Строит таблицу конечных разностей.
     Возвращает матрицу, где столбец j - это разности j-го порядка.
@@ -41,7 +41,7 @@ for i in range(n):
     rows.append(row)
 
 
-def gauss_first_formula(x: float, x0: float, h: float, table):
+def gauss_first_formula(x: float, x0: float, h: float, table: list[list]) -> float:
     """
     Вычисляет значение полинома по первой формуле Гаусса (стр. 16 методички).
     Для экстраполяции влево в качестве x0 берем первый узел (индекс 0).
@@ -79,3 +79,69 @@ for x in xj_mas:
     gauss_results.append(y_val)
     q_val = (x - x0) / h
     rows_res.append([f"{x:.3f}", f"{y_val:.6f}", f"{q_val:.4f}"])
+
+
+def print_gauss_polynomial_formula(x0: float, h: float, table: list[list]) -> None:
+    """
+    Выводит формулу полинома Гаусса в явном виде с подставленными числами.
+    """
+
+    y0 = table[0][0]
+    dy0 = table[0][1]
+    d2y_1 = table[0][2]
+    d3y_1 = table[0][3]
+    d4y_2 = table[0][4]
+
+    # q = (x - x0) / h
+    # Подставляем числа: q = (x - 1.375) / 0.005 = 200*x - 275
+    q_expr = f"((x - {x0}) / {h:.3f})"
+
+    # Формируем строку формулы
+    formula = f"P(x) = {y0:.5f}"
+    formula += f" + {dy0:.5f} * q"
+    formula += f" + ({d2y_1:.5f} / 2) * q * (q - 1)"
+    formula += f" + ({d3y_1:.5f} / 6) * (q + 1) * q * (q - 1)"
+    formula += f" + ({d4y_2:.5f} / 24) * (q + 1) * q * (q - 1) * (q - 2)"
+
+    Rich.print_spacer()
+    Rich.simple_log("Аналитический вид интерполяционного полинома Гаусса")
+    Rich.simple_log(f"где q = {q_expr}")
+    Rich.simple_log(formula)
+
+
+def show_graphic_formula():
+    """
+    Функция для показа графика интерполяции
+
+    :return:
+    """
+
+    Rich.print_spacer()
+    Rich.simple_log("Построение графика интерполяции и экстраполяции")
+
+    # 1. Создаем гладкую линию для полинома
+    # Берем диапазон от минимального xj до максимального xi с запасом
+    x_min = min(min(xj_mas), min(xi_mas)) - 0.01
+    x_max = max(max(xi_mas), max(xj_mas)) + 0.01
+    x_smooth = np.linspace(x_min, x_max, 200)
+
+    y_smooth = [gauss_first_formula(xi, x0, h, diff_table) for xi in x_smooth]
+
+    plt.figure(figsize=(10, 6))
+
+    # Линия полинома
+    plt.plot(x_smooth, y_smooth, label='Полином Гаусса', color='blue')
+
+    # Исходные точки
+    plt.scatter(xi_mas, yi_mas, color='red', marker='o', s=80, label='Исходные узлы (x_i, y_i)', zorder=5)
+
+    # Вычисленные точки
+    plt.scatter(xj_mas, gauss_results, color='green', marker='x', s=80, label='Вычисленные точки (y_j)', zorder=5)
+
+    # Оформление
+    plt.title('Интерполяция и экстраполяция (Первая формула Гаусса)')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.show()
