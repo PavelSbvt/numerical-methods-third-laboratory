@@ -1,8 +1,11 @@
 from core.first_Gauss_formula import (
-    build_difference_table,
+    diff_table,
     xi_mas, yi_mas,
     cols, rows,
-    cols_res, rows_res)
+    cols_res, rows_res,
+    print_gauss_polynomial_formula,
+    x0, h,
+    show_graphic_formula)
 from utils.output_rich import Rich
 
 # варианты лабораторной - 4, 10
@@ -23,4 +26,6 @@ if __name__== "__main__":
     Rich.print_table("Результаты интерполяции/экстраполяции", cols_res, rows_res)
     Rich.success_log("Вычисления по Гауссу завершены")
 
-    Rich.simple_log(f"Полином: ")
+    print_gauss_polynomial_formula(x0, h, diff_table)
+
+    show_graphic_formula()
